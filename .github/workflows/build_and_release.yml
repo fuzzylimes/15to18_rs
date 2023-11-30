@@ -37,15 +37,21 @@ jobs:
       run: cargo build --release --target ${{ matrix.target }}
 
     - name: List build artifacts
-      run: ls target/x86_64-pc-windows-msvc/release/
+      run: ls target/${{ matrix.target }}/release/
+  
+    - name: Upload Artifact for Windows
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v2
+      with:
+        name: 15to18-${{ matrix.target }}.exe
+        path: target/${{ matrix.target }}/release/15to18.exe
     
-    - name: Upload Artifact
+    - name: Upload Artifact for Non-Windows
+      if: matrix.os != 'windows-latest'
       uses: actions/upload-artifact@v2
       with:
         name: 15to18-${{ matrix.target }}
-        path: |
-          ${{ matrix.os == 'windows-latest' && 'target/x86_64-pc-windows-msvc/release/15to18.exe' || 'target/${{ matrix.target }}/release/15to18' }}
-        if-no-files-found: warn
+        path: target/${{ matrix.target }}/release/15to18
 
   release:
     needs: build
