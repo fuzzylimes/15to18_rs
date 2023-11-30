@@ -11,25 +11,34 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Rust
+    - name: Install Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
         profile: minimal
         toolchain: stable
+        target: ${{ matrix.target }}
         override: true
 
     - name: Build
-      run: cargo build --release
+      run: cargo build --release --target ${{ matrix.target }}
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ matrix.os }}
-        path: target/release/my-app
+        name: 15to18-${{ matrix.target }}
+        path: target/${{ matrix.target }}/release/15to18
 
   release:
     needs: build
@@ -49,12 +58,46 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v2
 
-      - name: Upload Release Assets
+      # Linux Binary Upload
+      - name: Upload Linux Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./ubuntu-latest/my-app
-          asset_name: my-app-ubuntu-latest
+          asset_path: ./15to18-x86_64-unknown-linux-gnu/15to18
+          asset_name: 15to18-linux
+          asset_content_type: application/octet-stream
+
+      # macOS Intel Binary Upload
+      - name: Upload macOS Intel Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./15to18-x86_64-apple-darwin/15to18
+          asset_name: 15to18-macos-intel
+          asset_content_type: application/octet-stream
+
+      # macOS Apple Silicon Binary Upload
+      - name: Upload macOS Apple Silicon Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./15to18-aarch64-apple-darwin/15to18
+          asset_name: 15to18-macos-apple-silicon
+          asset_content_type: application/octet-stream
+
+      # Windows Binary Upload
+      - name: Upload Windows Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./15to18-x86_64-pc-windows-msvc/15to18.exe
+          asset_name: 15to18-windows.exe
           asset_content_type: application/octet-stream
