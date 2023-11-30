@@ -43,7 +43,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       uses: actions/upload-artifact@v2
       with:
-        name: 15to18-${{ matrix.target }}.exe
+        name: 15to18-${{ matrix.target }}
         path: target/${{ matrix.target }}/release/15to18.exe
     
     - name: Upload Artifact for Non-Windows
@@ -66,6 +66,9 @@ jobs:
 
       - name: Download Artifacts
         uses: actions/download-artifact@v2
+
+      - name: List downloaded files
+        run: ls -R
 
       # Linux Binary Upload
       - name: Upload Linux Release Asset
